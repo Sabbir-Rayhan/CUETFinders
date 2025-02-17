@@ -1,35 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react'
+import { useEffect,useState } from 'react'
+import Navbar from './Components/Navbar'
+import { BrowserRouter,Route,Routes,useLocation,useNavigate } from 'react-router-dom'
+import Home from './Components/Home'
+import Lost from './Components/Lost'
+import Found from './Components/Found'
+import ReportLost from './Components/ReportLost'
+import ReportFound from './Components/ReportFound'
+import Footer from './Components/Footer'
+import Login from './Components/Login'
+import Signup from './Components/SignUp'
+import Admin from './Components/Admin'
+import Profile from './Components/Profile'
+
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/validate', {
+          method: 'GET',
+          credentials: 'include',
+        });
+        const data = await response.json();
+        if (data.success) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setUser(null);
+      }
+    };
+
+    fetchUser();
+  }, [user]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div>
+      <Navbar user={user} setUser={setUser}/>
+      <Routes>
+        <Route path='/' element={<Home/>}/>
+        <Route path='/lost' element={<Lost/>}/>
+        <Route path='/found' element={<Found/>}/>
+        <Route path='/reportlost' element={<ReportLost/>}/>
+        <Route path='/reportfound' element={<ReportFound/>}/>
+        <Route path='/login' element={<Login/>}/>
+        <Route path='/signup' element={<Signup/>}/>
+        <Route path='/admin' element={<Admin/>}/>
+        <Route path='/profile/:id' element={<Profile/>}/>
+      </Routes>
+      <Footer/>
+    </div>
   )
 }
 
-export default App
+function AppWrapper(){
+  return(
+    <BrowserRouter>
+      <App/>
+    </BrowserRouter>
+  )
+}
+
+export default AppWrapper
