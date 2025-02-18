@@ -110,6 +110,11 @@ app.get('/validate', async (req, res) => {
 
 //Report Lost
 app.post('/reportlost',authenticateUser, upload.single('photo'), async (req, res) => {
+  const token = req.cookies.token;
+  const decoded = jwt.verify(token, "mahee");
+  let user = await userlist.findOne({ email: decoded.email });
+
+
   const { name,item,location,date,description,contact } = req.body;
 
   // Determine the photo path
@@ -128,8 +133,14 @@ app.post('/reportlost',authenticateUser, upload.single('photo'), async (req, res
       date,
       description,
       photo,
-      contact // Save the photo path or URL in the database
+      contact ,// Save the photo path or URL in the database
+      user: user._id, // Associate the post with the user
     });
+
+    // Add the post to the user's reportLostPosts array
+    user.reportLostPosts.push(product._id);
+    await user.save();
+
     res.json({ success: true, product });
   } catch (error) {
     console.error('Error saving product:', error);
@@ -163,6 +174,10 @@ app.get("/allfoundpost", async (req, res) => {
 
 //Post Found
 app.post('/postfound',authenticateUser, upload.single('photo'), async (req, res) => {
+  const token = req.cookies.token;
+  const decoded = jwt.verify(token, "mahee");
+  const user = await userlist.findOne({ email: decoded.email });
+
   const { name,item,location,date,description,contact } = req.body;
 
   // Determine the photo path
@@ -181,8 +196,14 @@ app.post('/postfound',authenticateUser, upload.single('photo'), async (req, res)
       date,
       description,
       photo,
-      contact // Save the photo path or URL in the database
+      contact,
+      user: user._id, // Associate the post with the user 
     });
+
+    // Add the post to the user's postFoundPosts array
+    user.postFoundPosts.push(product._id);
+    await user.save();
+
     res.json({ success: true, product });
   } catch (error) {
     console.error('Error saving product:', error);
@@ -241,6 +262,39 @@ app.delete("/allfoundpost/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting found post:", error);
     res.status(500).json({ success: false, message: "Failed to delete found post" });
+  }
+});
+
+
+app.get("/profile/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Fetch user details and populate posts
+    const user = await userlist
+      .findById(id)
+      .populate("reportLostPosts") // Ensure lowercase "reportLostPosts"
+      .populate("postFoundPosts"); // Ensure lowercase "postFoundPosts"
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        address: user.address,
+        profilePicture: user.profilePicture,
+      },
+      lostPosts: user.reportLostPosts,
+      foundPosts: user.postFoundPosts,
+    });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch user profile" });
   }
 });
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate,useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const ReportFound = () => {
   const [form, setForm] = useState({
@@ -8,21 +8,19 @@ const ReportFound = () => {
     location: "",
     date: "",
     description: "",
-    //image: null,
     contact: "",
   });
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setForm({
-      ...form,
-      [name]: value, // Handle file upload
-    });
-  };
-
-
   const [photo, setPhoto] = useState(null); // State for the photo file
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({
+      ...form,
+      [name]: value,
+    });
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]; // Get the selected file
@@ -31,30 +29,31 @@ const ReportFound = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission (e.g., send data to an API)
+
+    // Create a FormData object
     const formData = new FormData();
-    formData.append('name', form.name);
-    formData.append('item', form.item);
-    formData.append('location', form.location);
-    formData.append('date', form.date);
-    formData.append('description', form.description);
-    formData.append('photo', photo); // Append the photo file
-    formData.append('contact', form.contact);
+    formData.append("name", form.name);
+    formData.append("item", form.item);
+    formData.append("location", form.location);
+    formData.append("date", form.date);
+    formData.append("description", form.description);
+    formData.append("contact", form.contact);
+    if (photo) {
+      formData.append("photo", photo); // Append the photo file
+    }
 
     try {
       const response = await fetch("http://localhost:3000/postfound", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+        body: formData, // Send FormData directly
         credentials: "include", // Include cookies in the request
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
-        alert("Post submitted successfully!");
+        alert("Report submitted successfully!");
+        navigate("/found"); // Redirect to the lost items page
       } else {
         alert(data.message || "Failed to submit report. Please log in.");
       }
@@ -62,20 +61,20 @@ const ReportFound = () => {
       console.error("Error submitting report:", error);
       alert("An error occurred. Please try again.");
     }
-
   };
 
   return (
     <section className="p-8 bg-gray-100 min-h-screen">
       {/* Page Title */}
       <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
-        Post Found
+        Post Found Item
       </h1>
 
       {/* Form */}
       <form
         onSubmit={handleSubmit}
         className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md"
+        encType="multipart/form-data" // Ensure the form supports file uploads
       >
         <div id="input-box" className="space-y-6">
           {/* Name Field */}
@@ -163,6 +162,7 @@ const ReportFound = () => {
               name="photo"
               onChange={handleFileChange}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+              required
             />
           </div>
 

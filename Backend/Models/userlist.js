@@ -1,15 +1,16 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 mongoose.connect("mongodb://127.0.0.1:27017/CUETFinders");
 
-const user = new mongoose.Schema({
-    name : String,
-    //email: { type: String, required: true, unique: true },
-    email : String,
-    password : String,
-    mobile : String,
-    address : String,
-    post : [{type : mongoose.Schema.Types.ObjectId,ref : "PostFound"}]
-})
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  mobile: { type: String },
+  address: { type: String },
+  profilePicture: { type: String, default: "" },
+  reportLostPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "reportlost" }],
+  postFoundPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "postfound" }],
+});
 
-module.exports = mongoose.model('users',user);
+module.exports = mongoose.model("userlist", userSchema);
