@@ -10,6 +10,7 @@ const postfound = mongoose.Schema({
     description: String,
     photo: String,
     contact: String,
+    user : {type: mongoose.Schema.Types.ObjectId, ref : "users"}
 })
 
 module.exports = mongoose.model('PostFound',postfound);

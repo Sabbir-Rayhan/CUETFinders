@@ -36,6 +36,20 @@ function Navbar({ user, setUser }) {
     }
   };
 
+
+    // Handle navigation to "Post Found" page
+    const handleReportFoundClick = async (e) => {
+      e.preventDefault(); // Prevent default navigation
+      const isLoggedIn = await checkUserLoggedIn();
+      if (isLoggedIn) {
+        navigate("/reportfound"); // Navigate to the "Report Lost" page
+      } else {
+        alert("You must be Logged In before making a Post")
+        navigate("/login"); // Redirect to the login page if not logged in
+      }
+    };
+  
+
   // Logout function
   const handleLogout = async () => {
     try {
@@ -98,7 +112,7 @@ function Navbar({ user, setUser }) {
               <Link to="/found">Found</Link>
             </li>
             <li
-              onClick={handleReportLostClick}
+              onClick={handleReportFoundClick}
               className={`font-bold mx-4 text-2xl hover:underline cursor-pointer hover:text-red-600 transition-shadow ${
                 isActive("/reportfound") ? "text-white underline" : ""
               }`}

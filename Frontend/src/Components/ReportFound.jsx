@@ -69,7 +69,7 @@ const ReportFound = () => {
     <section className="p-8 bg-gray-100 min-h-screen">
       {/* Page Title */}
       <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
-        Report Lost Item
+        Post Found
       </h1>
 
       {/* Form */}
