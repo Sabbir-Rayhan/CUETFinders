@@ -299,6 +299,76 @@ app.get("/profile/:id", async (req, res) => {
 });
 
 
+app.post("/update-profile-picture/:id", upload.single("photo"), async (req, res) => {
+  const { id } = req.params;
+  const photo = req.file ? `uploads/${req.file.filename}` : null;
+
+  try {
+    const user = await userlist.findByIdAndUpdate(
+      id,
+      { profilePicture: photo },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, profilePicture: user.profilePicture });
+  } catch (error) {
+    console.error("Error updating profile picture:", error);
+    res.status(500).json({ success: false, message: "Failed to update profile picture" });
+  }
+});
+
+
+app.put("/alllostpost/:id", async (req, res) => {
+  const { id } = req.params;
+  const { item, description, location, date, contact } = req.body;
+
+  try {
+    const post = await reportlost.findByIdAndUpdate(
+      id,
+      { item, description, location, date, contact },
+      { new: true }
+    );
+
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    res.json({ success: true, post });
+  } catch (error) {
+    console.error("Error updating lost post:", error);
+    res.status(500).json({ success: false, message: "Failed to update lost post" });
+  }
+});
+
+app.put("/allfoundpost/:id", async (req, res) => {
+  const { id } = req.params;
+  const { item, description, location, date, contact } = req.body;
+
+  try {
+    const post = await postfound.findByIdAndUpdate(
+      id,
+      { item, description, location, date, contact },
+      { new: true }
+    );
+
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    res.json({ success: true, post });
+  } catch (error) {
+    console.error("Error updating found post:", error);
+    res.status(500).json({ success: false, message: "Failed to update found post" });
+  }
+});
+
+
+
+
 
 app.listen(3000, () => {
   console.log('Server is running on port 3000');

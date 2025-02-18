@@ -8,6 +8,9 @@ function Profile() {
   const [lostPosts, setLostPosts] = useState([]);
   const [foundPosts, setFoundPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(""); // For search functionality
+  const [editPost, setEditPost] = useState(null); // For editing a post
+  const [isEditing, setIsEditing] = useState(false); // To toggle edit mode
 
   // Fetch user profile and posts
   useEffect(() => {
@@ -31,6 +34,102 @@ function Profile() {
     fetchProfile();
   }, [id]);
 
+  // Handle profile picture update
+  const handleProfilePictureUpdate = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("photo", file);
+
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/update-profile-picture/${id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setUser({ ...user, profilePicture: response.data.profilePicture });
+        alert("Profile picture updated successfully!");
+      } else {
+        console.error("Failed to update profile picture:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+    }
+  };
+
+  // Handle search functionality
+  const filteredLostPosts = lostPosts.filter((post) =>
+    post.item.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filteredFoundPosts = foundPosts.filter((post) =>
+    post.item.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Handle post deletion
+  const handleDeletePost = async (postId, type) => {
+    try {
+      const endpoint = type === "lost" ? "/alllostpost" : "/allfoundpost";
+      await axios.delete(`http://localhost:3000${endpoint}/${postId}`);
+
+      // Update state to remove the deleted post
+      if (type === "lost") {
+        setLostPosts(lostPosts.filter((post) => post._id !== postId));
+      } else {
+        setFoundPosts(foundPosts.filter((post) => post._id !== postId));
+      }
+
+      alert("Post deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
+
+  // Handle post editing
+  const handleEditPost = (post) => {
+    setEditPost(post);
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const endpoint = editPost.item ? "/alllostpost" : "/allfoundpost";
+      const response = await axios.put(
+        `http://localhost:3000${endpoint}/${editPost._id}`,
+        editPost
+      );
+
+      if (response.data.success) {
+        // Update the posts in the state
+        if (editPost.item) {
+          setLostPosts(
+            lostPosts.map((post) =>
+              post._id === editPost._id ? response.data.post : post
+            )
+          );
+        } else {
+          setFoundPosts(
+            foundPosts.map((post) =>
+              post._id === editPost._id ? response.data.post : post
+            )
+          );
+        }
+
+        setIsEditing(false);
+        setEditPost(null);
+        alert("Post updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating post:", error);
+    }
+  };
+
   if (loading) {
     return <div className="text-center text-lg font-semibold py-20">Loading...</div>;
   }
@@ -45,11 +144,23 @@ function Profile() {
       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden p-8">
         <div className="flex flex-col items-center space-y-4">
           {/* Profile Picture */}
-          <img
-            src={user.profilePicture || "https://via.placeholder.com/150"} // Default placeholder image
-            alt="Profile"
-            className="w-32 h-32 rounded-full object-cover border-4 border-[#088178]"
-          />
+          <label htmlFor="profile-picture" className="cursor-pointer">
+            <img
+              src={
+                user.profilePicture
+                  ? `http://localhost:3000/${user.profilePicture}`
+                  : "https://via.placeholder.com/150"
+              }
+              alt="Profile"
+              className="w-32 h-32 rounded-full object-cover border-4 border-[#088178]"
+            />
+            <input
+              type="file"
+              id="profile-picture"
+              className="hidden"
+              onChange={handleProfilePictureUpdate}
+            />
+          </label>
 
           {/* User Details */}
           <h1 className="text-3xl font-bold text-gray-800">{user.name}</h1>
@@ -59,11 +170,22 @@ function Profile() {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="max-w-4xl mx-auto mt-8">
+        <input
+          type="text"
+          placeholder="Search your posts..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded-lg"
+        />
+      </div>
+
       {/* Lost Posts Section */}
       <div className="max-w-4xl mx-auto mt-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Lost Posts</h2>
-        {lostPosts.length > 0 ? (
-          lostPosts.map((post) => (
+        {filteredLostPosts.length > 0 ? (
+          filteredLostPosts.map((post) => (
             <div
               key={post._id}
               className="bg-white shadow-lg rounded-lg overflow-hidden p-6 mb-6"
@@ -78,6 +200,20 @@ function Profile() {
               <p className="text-gray-600">{post.location}</p>
               <p className="text-gray-600">{new Date(post.date).toLocaleDateString()}</p>
               <p className="text-gray-600">{post.contact}</p>
+              <div className="flex space-x-4 mt-4">
+                <button
+                  onClick={() => handleEditPost(post)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDeletePost(post._id, "lost")}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))
         ) : (
@@ -88,8 +224,8 @@ function Profile() {
       {/* Found Posts Section */}
       <div className="max-w-4xl mx-auto mt-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Found Posts</h2>
-        {foundPosts.length > 0 ? (
-          foundPosts.map((post) => (
+        {filteredFoundPosts.length > 0 ? (
+          filteredFoundPosts.map((post) => (
             <div
               key={post._id}
               className="bg-white shadow-lg rounded-lg overflow-hidden p-6 mb-6"
@@ -104,12 +240,58 @@ function Profile() {
               <p className="text-gray-600">{post.location}</p>
               <p className="text-gray-600">{new Date(post.date).toLocaleDateString()}</p>
               <p className="text-gray-600">{post.contact}</p>
+              <div className="flex space-x-4 mt-4">
+                <button
+                  onClick={() => handleEditPost(post)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDeletePost(post._id, "found")}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))
         ) : (
           <p className="text-gray-600">No found posts found.</p>
         )}
       </div>
+
+      {/* Edit Post Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg w-1/2">
+            <h2 className="text-2xl font-bold mb-4">Edit Post</h2>
+            <input
+              type="text"
+              value={editPost.item}
+              onChange={(e) => setEditPost({ ...editPost, item: e.target.value })}
+              className="w-full p-2 border border-gray-300 rounded-lg mb-4"
+            />
+            <textarea
+              value={editPost.description}
+              onChange={(e) => setEditPost({ ...editPost, description: e.target.value })}
+              className="w-full p-2 border border-gray-300 rounded-lg mb-4"
+            />
+            <button
+              onClick={handleSaveEdit}
+              className="bg-green-500 text-white px-4 py-2 rounded-lg"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setIsEditing(false)}
+              className="bg-gray-500 text-white px-4 py-2 rounded-lg ml-4"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
