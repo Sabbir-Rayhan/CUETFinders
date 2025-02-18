@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 const Found = () => {
   const [posts, setPosts] = useState([]); // State to store found items
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [copiedPostId, setCopiedPostId] = useState(null); // State to track which post's contact was copied
 
   // Fetch found items from the backend
   useEffect(() => {
@@ -33,6 +34,19 @@ const Found = () => {
       post.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.contact.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Function to copy contact number
+  const handleCopyContact = (contact, postId) => {
+    navigator.clipboard
+      .writeText(contact)
+      .then(() => {
+        setCopiedPostId(postId); // Set the post ID to show feedback
+        setTimeout(() => setCopiedPostId(null), 2000); // Reset after 2 seconds
+      })
+      .catch((error) => {
+        console.error("Failed to copy contact:", error);
+      });
+  };
 
   return (
     <section id="found-contents" className="p-8 bg-gray-100 min-h-screen">
@@ -73,7 +87,7 @@ const Found = () => {
       {/* Post Container */}
       <div
         id="post-container"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
       >
         {filteredPosts.length > 0 ? (
           filteredPosts.map((post) => (
@@ -110,7 +124,7 @@ const Found = () => {
               {/* Owner Info */}
               <div className="Owner-info p-4 border-b">
                 <h5 className="text-lg font-semibold text-gray-800">
-                  Owner Name
+                  Founder Name
                 </h5>
                 <p className="text-sm text-gray-600">{post.name}</p>
               </div>
@@ -132,9 +146,20 @@ const Found = () => {
               </div>
 
               {/* Contact Button */}
-              <button className="cont-btn w-full bg-amber-500 text-white p-3 hover:bg-amber-600 transition-colors">
-                Contact: {post.contact}
-              </button>
+              <div className="relative">
+                <button
+                  className="cont-btn w-full bg-amber-500 text-white p-3 hover:bg-amber-600 transition-colors"
+                  onMouseEnter={() => handleCopyContact(post.contact, post._id)}
+                  title="Hover to copy contact number"
+                >
+                  Contact: {post.contact}
+                </button>
+                {copiedPostId === post._id && (
+                  <div className="absolute top-0 right-0 bg-green-500 text-white px-2 py-1 rounded-lg text-sm">
+                    Copied!
+                  </div>
+                )}
+              </div>
             </div>
           ))
         ) : (

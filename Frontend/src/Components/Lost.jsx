@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 const Lost = () => {
   const [posts, setPosts] = useState([]); // State to store lost items
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [copiedPostId, setCopiedPostId] = useState(null); // State to track which post's contact was copied
 
   // Fetch lost items from the backend
   useEffect(() => {
@@ -25,13 +26,27 @@ const Lost = () => {
   }, []);
 
   // Filter posts based on search query
-  const filteredPosts = posts.filter((post) =>
-    post.item.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    post.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    post.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.contact.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPosts = posts.filter(
+    (post) =>
+      post.item.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.contact.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Function to copy contact number
+  const handleCopyContact = (contact, postId) => {
+    navigator.clipboard
+      .writeText(contact)
+      .then(() => {
+        setCopiedPostId(postId); // Set the post ID to show feedback
+        setTimeout(() => setCopiedPostId(null), 2000); // Reset after 2 seconds
+      })
+      .catch((error) => {
+        console.error("Failed to copy contact:", error);
+      });
+  };
 
   return (
     <section id="lost-contents" className="p-8 bg-gray-100 min-h-screen">
@@ -74,10 +89,16 @@ const Lost = () => {
       </div>
 
       {/* Post Container */}
-      <div id="post-container" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        id="post-container"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+      >
         {filteredPosts.length > 0 ? (
           filteredPosts.map((post) => (
-            <div key={post._id} className="post-box bg-white rounded-lg shadow-md overflow-hidden">
+            <div
+              key={post._id}
+              className="post-box bg-white rounded-lg shadow-md overflow-hidden"
+            >
               {/* Item Header */}
               <div className="item-header flex items-center p-4 border-b">
                 <img
@@ -86,8 +107,12 @@ const Lost = () => {
                   className="h-10 bg-amber-600 w-10 rounded-full"
                 />
                 <div className="ml-4">
-                  <h5 className="text-lg font-semibold text-gray-800">{post.item}</h5>
-                  <p className="text-sm text-gray-500">Date: {new Date(post.date).toLocaleDateString()}</p>
+                  <h5 className="text-lg font-semibold text-gray-800">
+                    {post.item}
+                  </h5>
+                  <p className="text-sm text-gray-500">
+                    Date: {new Date(post.date).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
 
@@ -102,26 +127,43 @@ const Lost = () => {
 
               {/* Owner Info */}
               <div className="Owner-info p-4 border-b">
-                <h5 className="text-lg font-semibold text-gray-800">Owner Name</h5>
+                <h5 className="text-lg font-semibold text-gray-800">
+                  Owner Name
+                </h5>
                 <p className="text-sm text-gray-600">{post.name}</p>
               </div>
 
               {/* Item Description */}
               <div className="item-desc p-4 border-b">
-                <h5 className="text-lg font-semibold text-gray-800">Description</h5>
+                <h5 className="text-lg font-semibold text-gray-800">
+                  Description
+                </h5>
                 <p className="text-sm text-gray-600">{post.description}</p>
               </div>
 
               {/* Location */}
               <div className="item-desc p-4 border-b">
-                <h5 className="text-lg font-semibold text-gray-800">Location</h5>
+                <h5 className="text-lg font-semibold text-gray-800">
+                  Location
+                </h5>
                 <p className="text-sm text-gray-600">{post.location}</p>
               </div>
 
               {/* Contact Button */}
-              <button className="cont-btn w-full bg-amber-500 text-white p-3 hover:bg-amber-600 transition-colors">
-                Contact: {post.contact}
-              </button>
+              <div className="relative">
+                <button
+                  className="cont-btn w-full bg-amber-500 text-white p-3 hover:bg-amber-600 transition-colors"
+                  onMouseEnter={() => handleCopyContact(post.contact, post._id)}
+                  title="Hover to copy contact number"
+                >
+                  Contact: {post.contact}
+                </button>
+                {copiedPostId === post._id && (
+                  <div className="absolute top-0 right-0 bg-green-500 text-white px-2 py-1 rounded-lg text-sm">
+                    Copied!
+                  </div>
+                )}
+              </div>
             </div>
           ))
         ) : (

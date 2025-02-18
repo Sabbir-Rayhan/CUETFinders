@@ -149,7 +149,7 @@ function Profile() {
               src={
                 user.profilePicture
                   ? `http://localhost:3000/${user.profilePicture}`
-                  : "https://via.placeholder.com/150"
+                  : "https://cdn.pixabay.com/photo/2019/08/11/18/59/icon-4399701_1280.png"
               }
               alt="Profile"
               className="w-32 h-32 rounded-full object-cover border-4 border-[#088178]"
@@ -182,7 +182,7 @@ function Profile() {
       </div>
 
       {/* Lost Posts Section */}
-      <div className="max-w-4xl mx-auto mt-8">
+      <div className="max-w-2xl mx-auto mt-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Lost Posts</h2>
         {filteredLostPosts.length > 0 ? (
           filteredLostPosts.map((post) => (
@@ -222,7 +222,7 @@ function Profile() {
       </div>
 
       {/* Found Posts Section */}
-      <div className="max-w-4xl mx-auto mt-8">
+      <div className="max-w-2xl mx-auto mt-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Found Posts</h2>
         {filteredFoundPosts.length > 0 ? (
           filteredFoundPosts.map((post) => (
@@ -233,7 +233,7 @@ function Profile() {
               <img
                 src={`http://localhost:3000/${post.photo}`}
                 alt={post.item}
-                className="w-full h-48 object-cover rounded-lg"
+                className="w-full h-60 object-cover rounded-lg"
               />
               <h3 className="text-xl font-bold text-gray-800 mt-4">{post.item}</h3>
               <p className="text-gray-600">{post.description}</p>
