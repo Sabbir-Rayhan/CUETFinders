@@ -21,22 +21,19 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission (e.g., send data to an API)
     try {
       const response = await fetch('http://localhost:3000/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(formData),
       });
       const data = await response.json();
+      console.log(data); // Log response to check success
       if (data.success) {
-        console.log(data.user);
-        navigate(from, { replace: true }); // Redirect to the "from" path after login
+        navigate(from, { replace: true });
       } else {
         alert(data.message); // Show error message
       }
@@ -44,6 +41,7 @@ const Login = () => {
       console.error('Login failed:', error);
     }
   };
+  
 
   return (
     <section className="flex items-center justify-center min-h-screen bg-gray-100">
